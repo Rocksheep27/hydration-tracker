@@ -1,0 +1,16 @@
+# Local HydrationTracker records and exported backups
+data/hydration_log.json
+hydration-tracker-backup-*.json
+
+# Local credentials and environment files
+.env
+.env.*
+!.env.example
+
+# Python and macOS local files
+__pycache__/
+*.py[cod]
+.DS_Store
+.Rhistory
+.venv/
+venv/

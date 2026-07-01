@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>HydrationTracker · 今日概览</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="header-inner">
+        <div>
+          <p class="product-stage">V2.3 · 本地 Web App</p>
+          <h1>HydrationTracker</h1>
+        </div>
+        <div class="local-status" aria-label="本地运行状态">
+          <span class="status-dot" aria-hidden="true"></span>
+          本机数据
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="overview-heading" aria-labelledby="overview-title">
+        <div>
+          <p class="section-label">每日水分</p>
+          <h2 id="overview-title">今日概览</h2>
+        </div>
+        <time id="today-date" aria-label="今天日期"></time>
+      </section>
+
+      <section class="summary-grid" aria-live="polite" aria-busy="true" id="summary">
+        <article class="primary-metric">
+          <p class="metric-label">今日总水分摄入</p>
+          <p class="metric-value"><strong id="total-water">--</strong><span>ml</span></p>
+          <div class="progress-track" aria-hidden="true">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+          <p class="progress-caption">默认目标 <span id="target-caption">--</span> ml</p>
+        </article>
+
+        <div class="secondary-metrics">
+          <article class="metric-card">
+            <p class="metric-label">目标完成率</p>
+            <p class="metric-value compact"><strong id="completion-rate">--</strong><span>%</span></p>
+          </article>
+          <article class="metric-card">
+            <p class="metric-label">距离目标还差</p>
+            <p class="metric-value compact"><strong id="remaining-water">--</strong><span>ml</span></p>
+          </article>
+          <article class="metric-card">
+            <p class="metric-label">今日记录</p>
+            <p class="metric-value compact"><strong id="record-count">--</strong><span>条</span></p>
+          </article>
+        </div>
+      </section>
+
+      <p class="load-message" id="load-message">正在读取本地记录...</p>
+
+      <section class="entry-section" aria-labelledby="entry-title">
+        <div class="entry-heading">
+          <div>
+            <p class="section-label">快速记录</p>
+            <h2 id="entry-title">添加记录</h2>
+          </div>
+          <p>默认份量和含水率均为日常估算值</p>
+        </div>
+
+        <form id="record-form">
+          <fieldset class="type-fieldset">
+            <legend>记录类型</legend>
+            <div class="segmented-control">
+              <label>
+                <input type="radio" name="category" value="water" checked>
+                <span>白水</span>
+              </label>
+              <label>
+                <input type="radio" name="category" value="beverage">
+                <span>饮品</span>
+              </label>
+              <label>
+                <input type="radio" name="category" value="food">
+                <span>食物</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="form-grid">
+            <label class="form-field">
+              <span>常用项目</span>
+              <select id="item-name" name="name" required></select>
+            </label>
+
+            <label class="form-field">
+              <span>数量</span>
+              <div class="quantity-input">
+                <input id="quantity" name="quantity" type="number" min="0.1" step="0.1" value="1" required inputmode="decimal">
+                <span id="quantity-unit">份</span>
+              </div>
+            </label>
+
+            <label class="form-field">
+              <span>餐次</span>
+              <select id="meal" name="meal">
+                <option value="breakfast">早餐</option>
+                <option value="lunch">午餐</option>
+                <option value="dinner">晚餐</option>
+                <option value="snack">加餐</option>
+                <option value="none" selected>无餐次</option>
+              </select>
+            </label>
+
+            <label class="form-field note-field">
+              <span>备注 <small>选填</small></span>
+              <input id="note" name="note" type="text" maxlength="500" placeholder="可直接留空">
+            </label>
+          </div>
+
+          <div class="estimate-preview" aria-live="polite">
+            <div>
+              <p class="metric-label">默认估算</p>
+              <p id="item-defaults">正在读取常用项目...</p>
+            </div>
+            <p class="estimate-value"><strong id="estimated-water">--</strong><span>ml 水分</span></p>
+          </div>
+
+          <div class="form-actions">
+            <p id="form-message" role="status" aria-live="polite"></p>
+            <button id="submit-record" type="submit">保存记录</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="records-section" aria-labelledby="records-title">
+        <div class="records-heading">
+          <div>
+            <p class="section-label">逐条核对</p>
+            <h2 id="records-title">今日记录明细</h2>
+          </div>
+          <button id="clear-today" class="danger-button" type="button" disabled>清空今日记录</button>
+        </div>
+
+        <p id="records-message" class="records-message" role="status" aria-live="polite">正在读取今日记录...</p>
+        <div id="records-list" class="records-list" aria-live="polite" aria-busy="true"></div>
+      </section>
+
+      <aside class="local-data-note">
+        <strong>数据仅保存在本机</strong>
+        <span>此 Web App 不联网、不上传；删除和清空只作用于今天的记录。</span>
+      </aside>
+    </main>
+  </body>
+</html>

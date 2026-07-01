@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">HydrationTracker water drop</title>
+  <desc id="desc">A turquoise water drop on a deep green background.</desc>
+  <rect width="1024" height="1024" fill="#173b35"/>
+  <circle cx="512" cy="512" r="350" fill="#24544b"/>
+  <path
+    d="M512 196C452 290 326 431 326 582c0 114 83 206 186 206s186-92 186-206C698 431 572 290 512 196Z"
+    fill="#6fd6c1"
+  />
+  <path
+    d="M412 575c0 79 48 126 113 137"
+    fill="none"
+    stroke="#dff8f2"
+    stroke-linecap="round"
+    stroke-width="42"
+  />
+  <circle cx="606" cy="430" r="34" fill="#dff8f2"/>
+  <path d="M382 834h260" fill="none" stroke="#e0a832" stroke-linecap="round" stroke-width="34"/>
+</svg>
