@@ -19,7 +19,7 @@
     <header class="app-header">
       <div class="page-shell header-inner">
         <div>
-          <p class="stage-label">V3.8 · 三视图与历史日历</p>
+          <p class="stage-label">V4.1 · 每日目标设置</p>
           <h1>HydrationTracker</h1>
         </div>
         <p class="runtime-status"><span aria-hidden="true"></span>纯前端原型</p>
@@ -60,7 +60,7 @@
               <div class="progress-summary">
                 <p>今日总水分摄入</p>
                 <div class="metric-value"><strong id="total-water">0</strong><span>ml</span></div>
-                <small>每日目标 2000 ml</small>
+                <small id="daily-goal-note">每日目标 2000 ml</small>
               </div>
               <p id="progress-encouragement" class="progress-encouragement">
                 <span aria-hidden="true">💧</span>
@@ -76,6 +76,49 @@
               <div class="metric-value"><strong id="record-count">0</strong><span>条</span></div>
             </article>
           </div>
+
+          <section class="goal-settings-card" aria-labelledby="goal-settings-title">
+            <div class="section-heading compact-heading details-heading">
+              <div>
+                <p class="section-label">个性化目标</p>
+                <h2 id="goal-settings-title">每日目标设置</h2>
+              </div>
+              <button
+                id="goal-settings-toggle"
+                class="secondary-button goal-settings-toggle"
+                type="button"
+                aria-expanded="false"
+                aria-controls="goal-settings-panel"
+              >修改目标</button>
+            </div>
+            <div class="goal-settings-summary">
+              <p>今日目标：<strong id="current-daily-goal">2000</strong> ml</p>
+              <p>本设置只保存在当前设备浏览器</p>
+            </div>
+            <div id="goal-settings-panel" class="goal-settings-panel" hidden>
+              <div class="goal-quick-actions" aria-label="常用目标快捷选择">
+                <button class="goal-quick-button" type="button" data-goal="1500">1500 ml</button>
+                <button class="goal-quick-button" type="button" data-goal="1800">1800 ml</button>
+                <button class="goal-quick-button" type="button" data-goal="2000">2000 ml</button>
+                <button class="goal-quick-button" type="button" data-goal="2500">2500 ml</button>
+              </div>
+              <form id="goal-settings-form">
+                <label class="form-field">
+                  <span>自定义目标</span>
+                  <div class="quantity-control">
+                    <input id="daily-goal-input" type="number" min="500" max="5000" step="1" inputmode="numeric" required>
+                    <span>ml</span>
+                  </div>
+                </label>
+                <p class="goal-settings-hint">建议范围 500–5000 ml，只支持正整数。</p>
+                <p id="goal-settings-message" class="goal-settings-message" role="status" aria-live="polite"></p>
+                <div class="goal-settings-actions">
+                  <button id="goal-settings-cancel" class="secondary-button" type="button">取消</button>
+                  <button id="goal-settings-save" type="submit">保存目标</button>
+                </div>
+              </form>
+            </div>
+          </section>
         </section>
 
         <section class="form-card" aria-labelledby="add-title">
@@ -177,7 +220,7 @@
               <p class="section-label">最近一周</p>
               <h2 id="trend-title">近 7 日水分趋势</h2>
             </div>
-            <p>默认目标 2000 ml</p>
+            <p id="trend-target-caption">当前目标 2000 ml</p>
           </div>
           <div id="trend-chart" class="trend-chart"></div>
           <p id="trend-summary" class="trend-summary"></p>

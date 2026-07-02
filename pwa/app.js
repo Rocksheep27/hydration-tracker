@@ -1,5 +1,7 @@
 const STORAGE_KEY = "hydration_tracker_v3_records";
 const SCHEMA_VERSION = 1;
+const SETTINGS_KEY = "hydration_tracker_v4_settings";
+const SETTINGS_VERSION = 1;
 const EXPORT_APP = "HydrationTracker";
 const EXPORT_VERSION = 1;
 const EXPORT_SOURCE = "pwa-localStorage";
@@ -287,6 +289,13 @@ function createEmptyData() {
   };
 }
 
+function createDefaultSettings() {
+  return {
+    settings_version: SETTINGS_VERSION,
+    daily_goal_ml: DEFAULT_TARGET_ML,
+  };
+}
+
 function formatNumber(value) {
   const rounded = Math.round((Number(value) + Number.EPSILON) * 10) / 10;
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
@@ -333,6 +342,27 @@ function isValidDateKey(value) {
 
 function isValidTimeValue(value) {
   return /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+}
+
+function normalizeDailyGoalMl(value) {
+  const numericValue = Number(value);
+  if (!Number.isInteger(numericValue) || numericValue < 500 || numericValue > 5000) {
+    throw new Error("每日目标必须是 500–5000 ml 的正整数");
+  }
+  return numericValue;
+}
+
+function validateSettingsContainer(settings) {
+  if (!settings || typeof settings !== "object" || Array.isArray(settings)) {
+    throw new Error("设置格式不正确");
+  }
+  if (settings.settings_version !== SETTINGS_VERSION) {
+    throw new Error("设置版本暂不支持");
+  }
+  return {
+    settings_version: SETTINGS_VERSION,
+    daily_goal_ml: normalizeDailyGoalMl(settings.daily_goal_ml),
+  };
 }
 
 function isValidRecord(record) {
@@ -388,6 +418,12 @@ function writeDataToStorage(storage, data) {
   storage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
+function writeSettingsToStorage(storage, settings) {
+  const validatedSettings = validateSettingsContainer(settings);
+  storage.setItem(SETTINGS_KEY, JSON.stringify(validatedSettings));
+  return validatedSettings;
+}
+
 function loadDataFromStorage(storage) {
   const rawValue = storage.getItem(STORAGE_KEY);
   if (rawValue === null) {
@@ -396,6 +432,27 @@ function loadDataFromStorage(storage) {
     return emptyData;
   }
   return parseStoredData(rawValue);
+}
+
+function loadSettingsFromStorage(storage) {
+  const rawValue = storage.getItem(SETTINGS_KEY);
+  if (rawValue === null) {
+    return createDefaultSettings();
+  }
+
+  try {
+    return validateSettingsContainer(JSON.parse(rawValue));
+  } catch (_error) {
+    return createDefaultSettings();
+  }
+}
+
+function getDailyGoalMl(settings) {
+  try {
+    return validateSettingsContainer(settings).daily_goal_ml;
+  } catch (_error) {
+    return DEFAULT_TARGET_ML;
+  }
 }
 
 function getRecordsForDate(data, targetDate) {
@@ -689,6 +746,7 @@ function restoreStorageReadyState() {
   elements.storageStatus.textContent = "记录只保存在当前浏览器；刷新页面后仍可读取";
   elements.notice.classList.remove("error");
   elements.saveButton.disabled = false;
+  elements.goalSettingsSaveButton.disabled = false;
   elements.historyBackfillSaveButton.disabled = false;
   elements.exportButton.disabled = false;
 }
@@ -701,8 +759,18 @@ const elements = {
   progressEncouragement: document.querySelector("#progress-encouragement"),
   remaining: document.querySelector("#remaining-water"),
   count: document.querySelector("#record-count"),
+  dailyGoalNote: document.querySelector("#daily-goal-note"),
+  currentDailyGoal: document.querySelector("#current-daily-goal"),
   notice: document.querySelector(".prototype-notice"),
   storageStatus: document.querySelector("#storage-status"),
+  goalSettingsToggle: document.querySelector("#goal-settings-toggle"),
+  goalSettingsPanel: document.querySelector("#goal-settings-panel"),
+  goalSettingsForm: document.querySelector("#goal-settings-form"),
+  goalSettingsInput: document.querySelector("#daily-goal-input"),
+  goalSettingsMessage: document.querySelector("#goal-settings-message"),
+  goalSettingsCancelButton: document.querySelector("#goal-settings-cancel"),
+  goalSettingsSaveButton: document.querySelector("#goal-settings-save"),
+  goalQuickButtons: [...document.querySelectorAll(".goal-quick-button")],
   form: document.querySelector("#record-form"),
   item: document.querySelector("#item-name"),
   quantity: document.querySelector("#quantity"),
@@ -724,6 +792,7 @@ const elements = {
   },
   trendChart: document.querySelector("#trend-chart"),
   trendSummary: document.querySelector("#trend-summary"),
+  trendTargetCaption: document.querySelector("#trend-target-caption"),
   calendarMonthLabel: document.querySelector("#calendar-month-label"),
   calendarGrid: document.querySelector("#calendar-grid"),
   previousMonthButton: document.querySelector("#previous-month"),
@@ -757,6 +826,7 @@ const elements = {
 };
 
 let appData = createEmptyData();
+let appSettings = createDefaultSettings();
 let storageReady = false;
 let pendingImportFile = null;
 let selectedHistoryDate = null;
@@ -812,6 +882,17 @@ function persistData(nextData) {
   }
   writeDataToStorage(globalThis.localStorage, nextData);
   appData = nextData;
+}
+
+function persistSettings(nextSettings) {
+  if (!storageReady) {
+    throw new Error("浏览器本地存储当前不可用");
+  }
+  appSettings = writeSettingsToStorage(globalThis.localStorage, nextSettings);
+}
+
+function getCurrentDailyGoalMl() {
+  return getDailyGoalMl(appSettings);
 }
 
 function renderItemOptions() {
@@ -902,7 +983,8 @@ function renderHistoryEstimate() {
 
 function renderOverview() {
   const now = new Date();
-  const summary = calculateSummary(appData, formatLocalDate(now));
+  const targetMl = getCurrentDailyGoalMl();
+  const summary = calculateSummary(appData, formatLocalDate(now), targetMl);
   elements.date.textContent = new Intl.DateTimeFormat("zh-CN", {
     month: "long",
     day: "numeric",
@@ -912,6 +994,8 @@ function renderOverview() {
   elements.rate.textContent = formatNumber(summary.completionRate);
   elements.remaining.textContent = formatNumber(summary.remainingMl);
   elements.count.textContent = formatNumber(summary.recordCount);
+  elements.currentDailyGoal.textContent = formatNumber(targetMl);
+  elements.dailyGoalNote.textContent = `每日目标 ${formatNumber(targetMl)} ml`;
 
   const visualRate = Math.min(Math.max(summary.completionRate, 0), 100);
   elements.progressRing.style.setProperty("--progress-value", `${visualRate}%`);
@@ -928,6 +1012,15 @@ function renderOverview() {
     createTextElement("strong", "", message.text)
   );
   elements.progressEncouragement.firstElementChild.setAttribute("aria-hidden", "true");
+}
+
+function renderGoalSettings() {
+  const targetMl = getCurrentDailyGoalMl();
+  elements.currentDailyGoal.textContent = formatNumber(targetMl);
+  elements.trendTargetCaption.textContent = `当前目标 ${formatNumber(targetMl)} ml`;
+  if (elements.goalSettingsPanel.hidden) {
+    elements.goalSettingsInput.value = String(targetMl);
+  }
 }
 
 function renderTodayRecords() {
@@ -1055,7 +1148,7 @@ function renderHistoryRecord(record) {
 }
 
 function renderTrendChart() {
-  const trend = buildRecentTrendData(appData);
+  const trend = buildRecentTrendData(appData, new Date(), 7, getCurrentDailyGoalMl());
   const width = 560;
   const height = 280;
   const left = 32;
@@ -1170,7 +1263,7 @@ function renderHistoryDetails() {
   }
 
   const records = getRecordsForDate(appData, selectedHistoryDate);
-  const summary = calculateSummary(appData, selectedHistoryDate);
+  const summary = calculateSummary(appData, selectedHistoryDate, getCurrentDailyGoalMl());
   elements.historyDetails.hidden = false;
   elements.historyDetailsTitle.textContent = `${selectedHistoryDate} 明细`;
   elements.historyClearDateButton.hidden = records.length === 0;
@@ -1200,7 +1293,9 @@ function renderCalendar() {
   const calendar = buildCalendarMonth(
     appData,
     visibleCalendarMonth.getFullYear(),
-    visibleCalendarMonth.getMonth()
+    visibleCalendarMonth.getMonth(),
+    new Date(),
+    getCurrentDailyGoalMl()
   );
   elements.calendarMonthLabel.textContent = calendar.label;
   elements.calendarGrid.replaceChildren();
@@ -1285,8 +1380,67 @@ function activateView(viewName, event) {
 
 function renderAll() {
   renderOverview();
+  renderGoalSettings();
   renderTodayRecords();
   renderHistory();
+}
+
+function showGoalSettingsMessage(text, type = "") {
+  elements.goalSettingsMessage.textContent = text;
+  elements.goalSettingsMessage.className = type
+    ? `goal-settings-message ${type}`
+    : "goal-settings-message";
+}
+
+function setGoalSettingsOpen(open, event) {
+  releasePointerFocus(event);
+  const shouldOpen = Boolean(open);
+  elements.goalSettingsPanel.hidden = !shouldOpen;
+  elements.goalSettingsToggle.setAttribute("aria-expanded", String(shouldOpen));
+  if (shouldOpen) {
+    elements.goalSettingsInput.value = String(getCurrentDailyGoalMl());
+    showGoalSettingsMessage("", "");
+  }
+}
+
+function toggleGoalSettings(event) {
+  setGoalSettingsOpen(elements.goalSettingsPanel.hidden, event);
+}
+
+function cancelGoalSettings(event) {
+  setGoalSettingsOpen(false, event);
+  elements.goalSettingsInput.value = String(getCurrentDailyGoalMl());
+  showGoalSettingsMessage("", "");
+}
+
+function applyQuickGoal(event) {
+  releasePointerFocus(event);
+  const button = event.currentTarget;
+  elements.goalSettingsInput.value = button.dataset.goal || String(DEFAULT_TARGET_ML);
+  showGoalSettingsMessage("", "");
+}
+
+function saveDailyGoalSettings(event) {
+  event.preventDefault();
+  if (!storageReady) {
+    showGoalSettingsMessage("本地存储不可用，未保存每日目标", "error");
+    return;
+  }
+
+  try {
+    const nextSettings = {
+      settings_version: SETTINGS_VERSION,
+      daily_goal_ml: normalizeDailyGoalMl(elements.goalSettingsInput.value),
+    };
+    persistSettings(nextSettings);
+    renderAll();
+    showGoalSettingsMessage(
+      `每日目标已更新为 ${formatNumber(nextSettings.daily_goal_ml)} ml`,
+      "ready"
+    );
+  } catch (error) {
+    showGoalSettingsMessage(error.message || "每日目标保存失败", "error");
+  }
 }
 
 function showFormMessage(text, type = "") {
@@ -1667,13 +1821,16 @@ async function importBackup(event) {
 function initializeStorage() {
   try {
     appData = loadDataFromStorage(globalThis.localStorage);
+    appSettings = loadSettingsFromStorage(globalThis.localStorage);
     restoreStorageReadyState();
   } catch (error) {
     appData = createEmptyData();
+    appSettings = createDefaultSettings();
     storageReady = false;
     elements.storageStatus.textContent = `${error.message || "无法读取浏览器本地数据"}，原数据未被覆盖`;
     elements.notice.classList.add("error");
     elements.saveButton.disabled = true;
+    elements.goalSettingsSaveButton.disabled = true;
     elements.historyBackfillSaveButton.disabled = true;
     elements.exportButton.disabled = true;
     elements.recordsMessage.textContent = "本地数据读取失败，请勿继续写入；可导入有效备份进行恢复";
@@ -1711,8 +1868,18 @@ const appShellReady = Boolean(
   && elements.progressEncouragement
   && elements.remaining
   && elements.count
+  && elements.dailyGoalNote
+  && elements.currentDailyGoal
   && elements.notice
   && elements.storageStatus
+  && elements.goalSettingsToggle
+  && elements.goalSettingsPanel
+  && elements.goalSettingsForm
+  && elements.goalSettingsInput
+  && elements.goalSettingsMessage
+  && elements.goalSettingsCancelButton
+  && elements.goalSettingsSaveButton
+  && elements.goalQuickButtons.length === 4
   && elements.form
   && elements.item
   && elements.quantity
@@ -1732,6 +1899,7 @@ const appShellReady = Boolean(
   && elements.views.backup
   && elements.trendChart
   && elements.trendSummary
+  && elements.trendTargetCaption
   && elements.calendarMonthLabel
   && elements.calendarGrid
   && elements.previousMonthButton
@@ -1765,6 +1933,12 @@ const appShellReady = Boolean(
 );
 
 if (appShellReady) {
+  elements.goalSettingsToggle.addEventListener("click", toggleGoalSettings);
+  elements.goalSettingsForm.addEventListener("submit", saveDailyGoalSettings);
+  elements.goalSettingsCancelButton.addEventListener("click", cancelGoalSettings);
+  for (const button of elements.goalQuickButtons) {
+    button.addEventListener("click", applyQuickGoal);
+  }
   for (const input of document.querySelectorAll('input[name="category"]')) {
     input.addEventListener("change", renderItemOptions);
   }
@@ -1808,6 +1982,9 @@ if (appShellReady) {
 globalThis.HydrationTrackerV3 = Object.freeze({
   STORAGE_KEY,
   SCHEMA_VERSION,
+  SETTINGS_KEY,
+  SETTINGS_VERSION,
+  DEFAULT_TARGET_ML,
   COMMON_ITEMS,
   ITEM_EMOJIS,
   EXPORT_APP,
@@ -1819,7 +1996,13 @@ globalThis.HydrationTrackerV3 = Object.freeze({
   isValidDateKey,
   isValidTimeValue,
   createEmptyData,
+  createDefaultSettings,
   parseStoredData,
+  validateSettingsContainer,
+  loadSettingsFromStorage,
+  writeSettingsToStorage,
+  getDailyGoalMl,
+  normalizeDailyGoalMl,
   getRecordsForDate,
   calculateSummary,
   summarizeRecordsByDate,

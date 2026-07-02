@@ -108,6 +108,69 @@ class PwaBackupTest(unittest.TestCase):
             },
         )
 
+    def test_default_settings_use_2000ml_goal(self):
+        payload = self.run_jxa(
+            "printJson(HydrationTrackerV3.createDefaultSettings());"
+        )
+
+        self.assertEqual(
+            payload,
+            {
+                "settings_version": 1,
+                "daily_goal_ml": 2000,
+            },
+        )
+
+    def test_valid_settings_are_loaded_from_storage(self):
+        payload = self.run_jxa(
+            "var storage = {getItem: function(key) { return key === HydrationTrackerV3.SETTINGS_KEY ? JSON.stringify({settings_version: 1, daily_goal_ml: 1800}) : null; }};"
+            "printJson(HydrationTrackerV3.loadSettingsFromStorage(storage));"
+        )
+
+        self.assertEqual(payload["daily_goal_ml"], 1800)
+
+    def test_invalid_settings_fall_back_to_default_goal(self):
+        payload = self.run_jxa(
+            "var storage = {getItem: function() { return JSON.stringify({settings_version: 1, daily_goal_ml: 'bad'}); }};"
+            "printJson(HydrationTrackerV3.loadSettingsFromStorage(storage));"
+        )
+
+        self.assertEqual(payload["daily_goal_ml"], 2000)
+
+    def test_missing_settings_fall_back_to_default_goal(self):
+        payload = self.run_jxa(
+            "var storage = {getItem: function() { return null; }};"
+            "printJson(HydrationTrackerV3.loadSettingsFromStorage(storage));"
+        )
+
+        self.assertEqual(payload["daily_goal_ml"], 2000)
+
+    def test_invalid_goal_value_is_rejected(self):
+        payload = self.run_jxa(
+            "try { HydrationTrackerV3.normalizeDailyGoalMl(499); printJson({ok: true}); }"
+            "catch (error) { printJson({ok: false, message: String(error.message || error)}); }"
+        )
+
+        self.assertFalse(payload["ok"])
+        self.assertIn("500", payload["message"])
+
+    def test_valid_goal_value_is_saved_without_touching_records(self):
+        payload = self.run_jxa(
+            "var calls = [];"
+            "var storage = {"
+            "  setItem: function(key, value) { calls.push({key: key, value: JSON.parse(value)}); },"
+            "  getItem: function() { return null; }"
+            "};"
+            "var settings = HydrationTrackerV3.writeSettingsToStorage(storage, {settings_version: 1, daily_goal_ml: 2500});"
+            "printJson({settings: settings, calls: calls});"
+        )
+
+        self.assertEqual(payload["settings"]["daily_goal_ml"], 2500)
+        self.assertEqual(len(payload["calls"]), 1)
+        self.assertEqual(payload["calls"][0]["key"], "hydration_tracker_v4_settings")
+        self.assertEqual(payload["calls"][0]["value"]["daily_goal_ml"], 2500)
+        self.assertNotEqual(payload["calls"][0]["key"], "hydration_tracker_v3_records")
+
     def test_export_filename_contains_local_date(self):
         payload = self.run_jxa(
             "printJson({filename: HydrationTrackerV3.buildExportFilename(new Date('2026-07-01T08:00:00.000Z'))});"
@@ -209,6 +272,14 @@ class PwaBackupTest(unittest.TestCase):
             ],
         )
 
+    def test_history_summary_uses_custom_goal(self):
+        record = self.make_record("rec_today", "2026-07-01", "08:30", 900)
+        body = f"printJson(HydrationTrackerV3.summarizeRecordsByDate({{schema_version: 1, records: {json.dumps([record], ensure_ascii=False)}}}, 1800));"
+        summaries = self.run_jxa(body)
+
+        self.assertEqual(summaries[0]["completionRate"], 50)
+        self.assertEqual(summaries[0]["remainingMl"], 900)
+
     def test_history_summary_groups_and_sorts_dates_descending(self):
         records = [
             self.make_record("rec_old", "2026-06-29", "12:00", 500),
@@ -292,6 +363,13 @@ class PwaBackupTest(unittest.TestCase):
             [0, 500, 0, 0, 0, 0, 250],
         )
 
+    def test_recent_trend_uses_custom_goal_line(self):
+        records = [self.make_record("rec_today", "2026-07-01", "09:00", 250)]
+        body = f"printJson(HydrationTrackerV3.buildRecentTrendData({{schema_version: 1, records: {json.dumps(records, ensure_ascii=False)}}}, new Date('2026-07-01T12:00:00'), 7, 1800));"
+        trend = self.run_jxa(body)
+
+        self.assertEqual(trend["targetMl"], 1800)
+
     def test_imported_records_are_available_to_calendar_and_history_summary(self):
         record = self.make_record("rec_imported", "2026-06-30", "10:00", 750)
         backup = {
@@ -322,6 +400,13 @@ class PwaBackupTest(unittest.TestCase):
         self.assertIn('id="today-view" class="app-view" role="tabpanel"', source)
         self.assertIn('id="history-view" class="app-view" role="tabpanel" aria-labelledby="nav-history" hidden', source)
         self.assertIn('id="backup-view" class="app-view" role="tabpanel" aria-labelledby="nav-backup" hidden', source)
+
+    def test_today_view_contains_daily_goal_settings_controls(self):
+        source = INDEX_HTML.read_text()
+        self.assertIn('id="goal-settings-title"', source)
+        self.assertIn('id="goal-settings-toggle"', source)
+        self.assertIn('id="daily-goal-input"', source)
+        self.assertIn('id="current-daily-goal"', source)
 
     def test_history_delete_matches_date_and_id_only(self):
         target = self.make_record("shared_id", "2026-06-30", "08:00", 250)

@@ -203,7 +203,8 @@ main {
 .history-card,
 .trend-card,
 .calendar-card,
-.backup-card {
+.backup-card,
+.goal-settings-card {
   border: 1px solid #dbe3e0;
   border-radius: 8px;
   background: #ffffff;
@@ -351,9 +352,98 @@ main {
 .history-card,
 .trend-card,
 .calendar-card,
-.backup-card {
+.backup-card,
+.goal-settings-card {
   margin-top: 28px;
   padding: 20px;
+}
+
+.goal-settings-card {
+  border: 1px solid #dbe3e0;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgb(24 32 30 / 5%);
+}
+
+.goal-settings-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+  padding: 14px;
+  border: 1px solid #dbe3e0;
+  border-radius: 6px;
+  background: #f7faf9;
+}
+
+.goal-settings-summary p {
+  margin: 0;
+  color: #52605c;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.goal-settings-summary strong {
+  color: #173b35;
+  font-size: 1rem;
+}
+
+.goal-settings-panel {
+  margin-top: 16px;
+  display: grid;
+  gap: 14px;
+}
+
+.goal-settings-toggle,
+.goal-quick-button {
+  width: auto;
+}
+
+.goal-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.goal-quick-button {
+  min-height: 42px;
+  padding: 0 14px;
+  color: #173b35;
+  border: 1px solid #cbd7d3;
+  border-radius: 999px;
+  background: #f5f8f7;
+  box-shadow: none;
+}
+
+.goal-settings-hint,
+.goal-settings-message {
+  margin: 0;
+  color: #63716d;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.goal-settings-message:not(:empty) {
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #f1f5f3;
+}
+
+.goal-settings-message.ready {
+  color: #23704b;
+  background: #edf8f2;
+}
+
+.goal-settings-message.error {
+  color: #a13e32;
+  background: #fff2f0;
+}
+
+.goal-settings-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .compact-heading {
@@ -736,7 +826,8 @@ button:disabled {
 }
 
 .view-heading + .trend-card,
-.view-heading + .backup-card {
+.view-heading + .backup-card,
+.view-heading + .goal-settings-card {
   margin-top: 0;
 }
 
@@ -1212,7 +1303,8 @@ footer {
   .history-card,
   .trend-card,
   .calendar-card,
-  .backup-card {
+  .backup-card,
+  .goal-settings-card {
     padding: 26px;
   }
 
@@ -1273,7 +1365,8 @@ footer {
   .history-card,
   .trend-card,
   .calendar-card,
-  .backup-card {
+  .backup-card,
+  .goal-settings-card {
     margin-top: 22px;
     padding: 16px;
   }

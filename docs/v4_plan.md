@@ -158,7 +158,7 @@ V4.1 不建议升级 `schema_version`。
 
 推荐结论：
 - 运行时先新增 `hydration_tracker_v4_settings`。
-- V4.1 第一阶段可以先不修改 JSON 备份格式。
+- V4.1 已按第一阶段方案落地，当前不修改 JSON 备份格式。
 - 但应在规划上预留后续兼容升级方案。
 
 原因：
@@ -195,17 +195,19 @@ V4.1 不建议升级 `schema_version`。
 
 ## 各小版本拆分
 
-### V4.1 每日目标设置
+### V4.1 每日目标设置（已完成）
 
 目标：
 - 让用户设置自己的每日目标。
 - 让今日页、历史月历和近 7 日趋势统一使用用户目标。
 
-数据边界：
+已实现数据边界：
 - 新增 `hydration_tracker_v4_settings`。
+- 设置对象为 `{ settings_version: 1, daily_goal_ml }`。
 - 不修改 `hydration_tracker_v3_records`。
 - 不升级 `schema_version`。
-- 第一阶段不强制升级 JSON 备份格式。
+- 第一阶段不升级 JSON 备份格式。
+- 当前历史日期完成率统一按当前目标重新计算，不保留按日期目标快照。
 
 测试重点：
 - 默认目标仍为 `2000 ml`。
