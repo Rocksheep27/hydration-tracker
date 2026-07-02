@@ -352,6 +352,13 @@ function normalizeDailyGoalMl(value) {
   return numericValue;
 }
 
+function buildDailyGoalSettings(value) {
+  return {
+    settings_version: SETTINGS_VERSION,
+    daily_goal_ml: normalizeDailyGoalMl(value),
+  };
+}
+
 function validateSettingsContainer(settings) {
   if (!settings || typeof settings !== "object" || Array.isArray(settings)) {
     throw new Error("设置格式不正确");
@@ -359,10 +366,7 @@ function validateSettingsContainer(settings) {
   if (settings.settings_version !== SETTINGS_VERSION) {
     throw new Error("设置版本暂不支持");
   }
-  return {
-    settings_version: SETTINGS_VERSION,
-    daily_goal_ml: normalizeDailyGoalMl(settings.daily_goal_ml),
-  };
+  return buildDailyGoalSettings(settings.daily_goal_ml);
 }
 
 function isValidRecord(record) {
@@ -1420,10 +1424,7 @@ function saveDailyGoalSettings(event) {
   }
 
   try {
-    const nextSettings = {
-      settings_version: SETTINGS_VERSION,
-      daily_goal_ml: normalizeDailyGoalMl(elements.goalSettingsInput.value),
-    };
+    const nextSettings = buildDailyGoalSettings(elements.goalSettingsInput.value);
     persistSettings(nextSettings);
     renderAll();
     showGoalSettingsMessage(
@@ -1926,6 +1927,7 @@ const appShellReady = Boolean(
 if (appShellReady) {
   elements.goalSettingsToggle.addEventListener("click", toggleGoalSettings);
   elements.goalSettingsForm.addEventListener("submit", saveDailyGoalSettings);
+  elements.goalSettingsSaveButton.addEventListener("click", saveDailyGoalSettings);
   elements.goalSettingsCancelButton.addEventListener("click", cancelGoalSettings);
   for (const input of document.querySelectorAll('input[name="category"]')) {
     input.addEventListener("change", renderItemOptions);
@@ -1986,6 +1988,7 @@ globalThis.HydrationTrackerV3 = Object.freeze({
   createEmptyData,
   createDefaultSettings,
   parseStoredData,
+  buildDailyGoalSettings,
   validateSettingsContainer,
   loadSettingsFromStorage,
   writeSettingsToStorage,

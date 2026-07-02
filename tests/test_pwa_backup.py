@@ -154,6 +154,40 @@ class PwaBackupTest(unittest.TestCase):
         self.assertFalse(payload["ok"])
         self.assertIn("500", payload["message"])
 
+    def test_goal_input_1800_builds_valid_settings(self):
+        payload = self.run_jxa(
+            "printJson(HydrationTrackerV3.buildDailyGoalSettings('1800'));"
+        )
+
+        self.assertEqual(
+            payload,
+            {
+                "settings_version": 1,
+                "daily_goal_ml": 1800,
+            },
+        )
+
+    def test_goal_boundary_values_500_and_5000_are_valid(self):
+        payload = self.run_jxa(
+            "printJson({min: HydrationTrackerV3.normalizeDailyGoalMl('500'), max: HydrationTrackerV3.normalizeDailyGoalMl('5000')});"
+        )
+
+        self.assertEqual(payload["min"], 500)
+        self.assertEqual(payload["max"], 5000)
+
+    def test_goal_values_499_and_5001_are_invalid(self):
+        payload = self.run_jxa(
+            "var result = {};"
+            "try { HydrationTrackerV3.normalizeDailyGoalMl('499'); result.low = 'ok'; }"
+            "catch (error) { result.low = String(error.message || error); }"
+            "try { HydrationTrackerV3.normalizeDailyGoalMl('5001'); result.high = 'ok'; }"
+            "catch (error) { result.high = String(error.message || error); }"
+            "printJson(result);"
+        )
+
+        self.assertIn("500", payload["low"])
+        self.assertIn("5000", payload["high"])
+
     def test_valid_goal_value_is_saved_without_touching_records(self):
         payload = self.run_jxa(
             "var calls = [];"
@@ -407,6 +441,7 @@ class PwaBackupTest(unittest.TestCase):
         self.assertIn('id="goal-settings-toggle"', source)
         self.assertIn('id="daily-goal-input"', source)
         self.assertIn('id="current-daily-goal"', source)
+        self.assertIn('id="goal-settings-save" type="button"', source)
         self.assertNotIn('goal-quick-button', source)
 
     def test_history_delete_matches_date_and_id_only(self):
