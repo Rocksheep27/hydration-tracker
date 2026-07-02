@@ -204,6 +204,8 @@ V4.1 不建议升级 `schema_version`。
 已实现数据边界：
 - 新增 `hydration_tracker_v4_settings`。
 - 设置对象为 `{ settings_version: 1, daily_goal_ml }`。
+- 界面只保留自定义每日目标输入，不保留固定快捷目标选项。
+- 保存交互以显式点击保存按钮为准，不再依赖已移除快捷选项的旧交互路径。
 - 不修改 `hydration_tracker_v3_records`。
 - 不升级 `schema_version`。
 - 第一阶段不升级 JSON 备份格式。
