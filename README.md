@@ -312,15 +312,18 @@ V3.8 已完成三视图重组、历史月历、近 7 日趋势、历史单条删
 
 ## GitHub Pages 发布准备
 
-V3.9 已进入 GitHub Pages 发布准备阶段，但当前尚未提交、推送或开启 Pages。
+V3.9 已进入 GitHub Pages Actions 部署配置阶段。当前仓库已完成首次推送，下一步是在 GitHub 网页端把 Pages Source 设为 GitHub Actions。
 
 - GitHub 仓库：`https://github.com/Rocksheep27/hydration-tracker`
 - 预计访问网址：`https://rocksheep27.github.io/hydration-tracker/`
-- Pages 将只发布 `pwa/` 静态资源；本地 `data/hydration_log.json` 不会上传。
+- 仓库中的 `.github/workflows/deploy-pages.yml` 会在每次 push 到 `main` 后，只把 `pwa/` 目录发布到 GitHub Pages。
+- Pages 不会发布 `data/hydration_log.json`、`src/`、`tests/` 或 V1/V2 的 Python 代码作为网页内容。
 - 当前局域网测试地址与未来 HTTPS 地址属于不同来源，localStorage 数据不会自动迁移。
 - 首次发布前，必须先在当前实际使用的 iPhone 主屏幕 Web App 中导出 JSON 备份。
 - 发布后，在新 HTTPS 地址打开应用，再通过“备份”视图导入旧数据。
 - localStorage key 仍为 `hydration_tracker_v3_records`，`schema_version` 仍为 `1`，JSON 导入导出格式不变。
+- Service Worker 仍只缓存 `pwa/` 内的静态资源，不保存用户记录数据。
+- 首次部署后，需要重点验证主屏幕模式、离线启动、Service Worker 更新和 JSON 恢复流程。
 
 详细路线见 `docs/roadmap.md`，产品需求见 `docs/product_requirements.md`。
 
