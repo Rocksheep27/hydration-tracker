@@ -407,6 +407,7 @@ class PwaBackupTest(unittest.TestCase):
         self.assertIn('id="goal-settings-toggle"', source)
         self.assertIn('id="daily-goal-input"', source)
         self.assertIn('id="current-daily-goal"', source)
+        self.assertNotIn('goal-quick-button', source)
 
     def test_history_delete_matches_date_and_id_only(self):
         target = self.make_record("shared_id", "2026-06-30", "08:00", 250)

@@ -770,7 +770,6 @@ const elements = {
   goalSettingsMessage: document.querySelector("#goal-settings-message"),
   goalSettingsCancelButton: document.querySelector("#goal-settings-cancel"),
   goalSettingsSaveButton: document.querySelector("#goal-settings-save"),
-  goalQuickButtons: [...document.querySelectorAll(".goal-quick-button")],
   form: document.querySelector("#record-form"),
   item: document.querySelector("#item-name"),
   quantity: document.querySelector("#quantity"),
@@ -1413,13 +1412,6 @@ function cancelGoalSettings(event) {
   showGoalSettingsMessage("", "");
 }
 
-function applyQuickGoal(event) {
-  releasePointerFocus(event);
-  const button = event.currentTarget;
-  elements.goalSettingsInput.value = button.dataset.goal || String(DEFAULT_TARGET_ML);
-  showGoalSettingsMessage("", "");
-}
-
 function saveDailyGoalSettings(event) {
   event.preventDefault();
   if (!storageReady) {
@@ -1879,7 +1871,6 @@ const appShellReady = Boolean(
   && elements.goalSettingsMessage
   && elements.goalSettingsCancelButton
   && elements.goalSettingsSaveButton
-  && elements.goalQuickButtons.length === 4
   && elements.form
   && elements.item
   && elements.quantity
@@ -1936,9 +1927,6 @@ if (appShellReady) {
   elements.goalSettingsToggle.addEventListener("click", toggleGoalSettings);
   elements.goalSettingsForm.addEventListener("submit", saveDailyGoalSettings);
   elements.goalSettingsCancelButton.addEventListener("click", cancelGoalSettings);
-  for (const button of elements.goalQuickButtons) {
-    button.addEventListener("click", applyQuickGoal);
-  }
   for (const input of document.querySelectorAll('input[name="category"]')) {
     input.addEventListener("change", renderItemOptions);
   }
