@@ -1,5 +1,5 @@
-const STATIC_CACHE_PREFIX = "hydration-tracker-v3-static-";
-const STATIC_CACHE_NAME = "hydration-tracker-v3-static-v6";
+const STATIC_CACHE_PREFIX = "hydration-tracker-";
+const STATIC_CACHE_NAME = "hydration-tracker-v4-1-goal-v7";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
