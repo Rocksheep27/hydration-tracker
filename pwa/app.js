@@ -767,12 +767,9 @@ const elements = {
   currentDailyGoal: document.querySelector("#current-daily-goal"),
   notice: document.querySelector(".prototype-notice"),
   storageStatus: document.querySelector("#storage-status"),
-  goalSettingsToggle: document.querySelector("#goal-settings-toggle"),
-  goalSettingsPanel: document.querySelector("#goal-settings-panel"),
   goalSettingsForm: document.querySelector("#goal-settings-form"),
   goalSettingsInput: document.querySelector("#daily-goal-input"),
   goalSettingsMessage: document.querySelector("#goal-settings-message"),
-  goalSettingsCancelButton: document.querySelector("#goal-settings-cancel"),
   goalSettingsSaveButton: document.querySelector("#goal-settings-save"),
   form: document.querySelector("#record-form"),
   item: document.querySelector("#item-name"),
@@ -1021,8 +1018,7 @@ function renderGoalSettings() {
   const targetMl = getCurrentDailyGoalMl();
   elements.currentDailyGoal.textContent = formatNumber(targetMl);
   elements.trendTargetCaption.textContent = `当前目标 ${formatNumber(targetMl)} ml`;
-  elements.goalSettingsToggle.textContent = elements.goalSettingsPanel.hidden ? "修改目标" : "收起目标";
-  if (elements.goalSettingsPanel.hidden) {
+  if (!elements.goalSettingsInput.value) {
     elements.goalSettingsInput.value = String(targetMl);
   }
 }
@@ -1396,43 +1392,6 @@ function showGoalSettingsMessage(text, type = "") {
     : "goal-settings-message";
 }
 
-function setGoalSettingsOpen(open, event) {
-  releasePointerFocus(event);
-  const shouldOpen = Boolean(open);
-  elements.goalSettingsPanel.hidden = !shouldOpen;
-  elements.goalSettingsToggle.setAttribute("aria-expanded", String(shouldOpen));
-  elements.goalSettingsToggle.textContent = shouldOpen ? "收起目标" : "修改目标";
-  if (shouldOpen) {
-    elements.goalSettingsInput.value = String(getCurrentDailyGoalMl());
-    showGoalSettingsMessage("", "");
-  }
-}
-
-function toggleGoalSettings(event) {
-  setGoalSettingsOpen(elements.goalSettingsPanel.hidden, event);
-}
-
-function cancelGoalSettings(event) {
-  setGoalSettingsOpen(false, event);
-  elements.goalSettingsInput.value = String(getCurrentDailyGoalMl());
-  showGoalSettingsMessage("", "");
-}
-
-function shouldAutoOpenGoalSettings(environment = globalThis) {
-  try {
-    if (environment.matchMedia) {
-      const compactViewport = environment.matchMedia("(max-width: 640px)");
-      if (compactViewport && compactViewport.matches) {
-        return true;
-      }
-    }
-  } catch (_error) {
-    // Ignore matchMedia issues and fall back to width checks.
-  }
-
-  return Number.isFinite(environment.innerWidth) && environment.innerWidth <= 640;
-}
-
 function saveDailyGoalSettings(event) {
   event.preventDefault();
   if (!storageReady) {
@@ -1443,6 +1402,7 @@ function saveDailyGoalSettings(event) {
   try {
     const nextSettings = buildDailyGoalSettings(elements.goalSettingsInput.value);
     persistSettings(nextSettings);
+    elements.goalSettingsInput.value = String(nextSettings.daily_goal_ml);
     renderAll();
     showGoalSettingsMessage(
       `每日目标已更新为 ${formatNumber(nextSettings.daily_goal_ml)} ml`,
@@ -1882,12 +1842,9 @@ const appShellReady = Boolean(
   && elements.currentDailyGoal
   && elements.notice
   && elements.storageStatus
-  && elements.goalSettingsToggle
-  && elements.goalSettingsPanel
   && elements.goalSettingsForm
   && elements.goalSettingsInput
   && elements.goalSettingsMessage
-  && elements.goalSettingsCancelButton
   && elements.goalSettingsSaveButton
   && elements.form
   && elements.item
@@ -1942,10 +1899,7 @@ const appShellReady = Boolean(
 );
 
 if (appShellReady) {
-  elements.goalSettingsToggle.addEventListener("click", toggleGoalSettings);
   elements.goalSettingsForm.addEventListener("submit", saveDailyGoalSettings);
-  elements.goalSettingsSaveButton.addEventListener("click", saveDailyGoalSettings);
-  elements.goalSettingsCancelButton.addEventListener("click", cancelGoalSettings);
   for (const input of document.querySelectorAll('input[name="category"]')) {
     input.addEventListener("change", renderItemOptions);
   }
@@ -1982,9 +1936,6 @@ if (appShellReady) {
   initializeStorage();
   resetImportSelection();
   renderAll();
-  if (shouldAutoOpenGoalSettings(globalThis)) {
-    setGoalSettingsOpen(true);
-  }
   activateView("today");
   registerServiceWorker();
 }
@@ -2010,7 +1961,6 @@ globalThis.HydrationTrackerV3 = Object.freeze({
   parseStoredData,
   buildDailyGoalSettings,
   validateSettingsContainer,
-  shouldAutoOpenGoalSettings,
   loadSettingsFromStorage,
   writeSettingsToStorage,
   getDailyGoalMl,

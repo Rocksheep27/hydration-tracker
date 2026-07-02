@@ -83,35 +83,25 @@
                 <p class="section-label">个性化目标</p>
                 <h2 id="goal-settings-title">每日目标设置</h2>
               </div>
-              <button
-                id="goal-settings-toggle"
-                class="secondary-button goal-settings-toggle"
-                type="button"
-                aria-expanded="false"
-                aria-controls="goal-settings-panel"
-              >修改目标</button>
             </div>
             <div class="goal-settings-summary">
               <p>今日目标：<strong id="current-daily-goal">2000</strong> ml</p>
               <p>本设置只保存在当前设备浏览器</p>
             </div>
-            <div id="goal-settings-panel" class="goal-settings-panel" hidden>
-              <form id="goal-settings-form">
-                <label class="form-field">
-                  <span>自定义目标</span>
-                  <div class="quantity-control">
-                    <input id="daily-goal-input" type="number" min="500" max="5000" step="1" inputmode="numeric" required>
-                    <span>ml</span>
-                  </div>
-                </label>
-                <p class="goal-settings-hint">建议范围 500–5000 ml，只支持正整数。</p>
-                <p id="goal-settings-message" class="goal-settings-message" role="status" aria-live="polite"></p>
-                <div class="goal-settings-actions">
-                  <button id="goal-settings-cancel" class="secondary-button" type="button">取消</button>
-                  <button id="goal-settings-save" type="button">保存目标</button>
+            <form id="goal-settings-form" class="goal-settings-form">
+              <label class="form-field">
+                <span>自定义目标</span>
+                <div class="quantity-control">
+                  <input id="daily-goal-input" type="text" inputmode="numeric" autocomplete="off" required>
+                  <span>ml</span>
                 </div>
-              </form>
-            </div>
+              </label>
+              <p class="goal-settings-hint">建议范围 500–5000 ml，只支持正整数。</p>
+              <p id="goal-settings-message" class="goal-settings-message" role="status" aria-live="polite"></p>
+              <div class="goal-settings-actions">
+                <button id="goal-settings-save" type="submit">保存目标</button>
+              </div>
+            </form>
           </section>
         </section>
 

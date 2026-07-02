@@ -389,16 +389,11 @@ main {
   font-size: 1rem;
 }
 
-.goal-settings-panel {
+.goal-settings-form {
   margin-top: 16px;
   display: grid;
   gap: 14px;
 }
-
-.goal-settings-toggle {
-  width: auto;
-}
-
 
 .goal-settings-hint,
 .goal-settings-message {
@@ -1325,10 +1320,6 @@ footer {
   .goal-settings-summary {
     align-items: flex-start;
     flex-direction: column;
-  }
-
-  .goal-settings-toggle {
-    width: 100%;
   }
 
   .goal-settings-actions {

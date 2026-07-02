@@ -188,14 +188,6 @@ class PwaBackupTest(unittest.TestCase):
         self.assertIn("500", payload["low"])
         self.assertIn("5000", payload["high"])
 
-    def test_goal_settings_auto_open_on_mobile_width(self):
-        payload = self.run_jxa(
-            "printJson({small: HydrationTrackerV3.shouldAutoOpenGoalSettings({innerWidth: 390}), large: HydrationTrackerV3.shouldAutoOpenGoalSettings({innerWidth: 900})});"
-        )
-
-        self.assertTrue(payload["small"])
-        self.assertFalse(payload["large"])
-
     def test_valid_goal_value_is_saved_without_touching_records(self):
         payload = self.run_jxa(
             "var calls = [];"
@@ -212,6 +204,22 @@ class PwaBackupTest(unittest.TestCase):
         self.assertEqual(payload["calls"][0]["key"], "hydration_tracker_v4_settings")
         self.assertEqual(payload["calls"][0]["value"]["daily_goal_ml"], 2500)
         self.assertNotEqual(payload["calls"][0]["key"], "hydration_tracker_v3_records")
+
+    def test_goal_value_1800_is_saved_under_settings_key_only(self):
+        payload = self.run_jxa(
+            "var calls = [];"
+            "var storage = {"
+            "  setItem: function(key, value) { calls.push({key: key, value: JSON.parse(value)}); },"
+            "  getItem: function() { return null; }"
+            "};"
+            "var settings = HydrationTrackerV3.writeSettingsToStorage(storage, HydrationTrackerV3.buildDailyGoalSettings('1800'));"
+            "printJson({settings: settings, calls: calls});"
+        )
+
+        self.assertEqual(payload["settings"], {"settings_version": 1, "daily_goal_ml": 1800})
+        self.assertEqual(payload["calls"][0]["key"], "hydration_tracker_v4_settings")
+        self.assertEqual(payload["calls"][0]["value"]["daily_goal_ml"], 1800)
+        self.assertNotIn("hydration_tracker_v3_records", [call["key"] for call in payload["calls"]])
 
     def test_export_filename_contains_local_date(self):
         payload = self.run_jxa(
@@ -446,10 +454,12 @@ class PwaBackupTest(unittest.TestCase):
     def test_today_view_contains_daily_goal_settings_controls(self):
         source = INDEX_HTML.read_text()
         self.assertIn('id="goal-settings-title"', source)
-        self.assertIn('id="goal-settings-toggle"', source)
         self.assertIn('id="daily-goal-input"', source)
         self.assertIn('id="current-daily-goal"', source)
-        self.assertIn('id="goal-settings-save" type="button"', source)
+        self.assertIn('id="goal-settings-save" type="submit"', source)
+        self.assertIn('id="goal-settings-form" class="goal-settings-form"', source)
+        self.assertNotIn('goal-settings-toggle', source)
+        self.assertNotIn('goal-settings-panel', source)
         self.assertNotIn('goal-quick-button', source)
 
     def test_history_delete_matches_date_and_id_only(self):
