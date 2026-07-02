@@ -523,98 +523,56 @@ Netlify 是第二选择：如果用户更偏好网页拖放或可视化部署向
 9. 导入后今日、历史和备份视图显示正确，并能继续添加、删除和导出。
 10. 家人设备可以打开同一网址并独立使用；各设备记录只保存在各自本地，不自动共享。
 
-V3.9 当前只完成方案研究。没有创建仓库、上传文件、配置域名或实际发布。
+V3.9 GitHub Pages 发布已完成，HydrationTracker 已进入可长期使用的固定 HTTPS PWA 阶段。
 
-#### GitHub Pages 发布准备（已开始）
+#### GitHub Pages 正式发布（已完成）
 
-发布目标已经确定：
+正式发布信息：
 
+- 正式访问地址：`https://rocksheep27.github.io/hydration-tracker/`
 - GitHub 用户名：`Rocksheep27`
 - 仓库名：`hydration-tracker`
-- 远程仓库：`https://github.com/Rocksheep27/hydration-tracker.git`
-- 预计 Pages 地址：`https://rocksheep27.github.io/hydration-tracker/`
+- GitHub 仓库地址：`https://github.com/Rocksheep27/hydration-tracker.git`
 
-当前本地状态：
+发布方式：
 
-- 正式项目路径为 `/Users/hhxx/Documents/CodexProjects/HydrationTracker`。
-- 本地 Git 初始化已完成，当前分支为 `main`。
-- `origin` 已设置为 `https://github.com/Rocksheep27/hydration-tracker.git`。
-- `git ls-remote --heads origin` 未返回远程分支，远程仓库目前看起来为空。
-- 首次本地提交和首次推送已完成，但尚未开启 GitHub Pages。
-- `data/hydration_log.json` 当前包含本地记录，必须保留在 Mac，不能提交或上传。
-- 根目录 `.gitignore` 已排除本地记录、JSON 备份、环境文件、Python 缓存和 macOS 本地文件。
+- 使用 GitHub Actions 自动部署 GitHub Pages。
+- 工作流文件为 `.github/workflows/deploy-pages.yml`。
+- 每次 push 到 `main` 后，只发布 `pwa/` 目录。
+- Pages 产物不包含 `data/hydration_log.json`、`src/`、`tests/`、`web/` 或其他非 PWA 文件。
 
-建议提交到源代码仓库：
+数据和边界：
 
-- `.gitignore`
-- `AGENTS.md`、`README.md`
-- `docs/`
-- `pwa/`
-- `src/`、`tests/`、`web/`
-- `data/.gitkeep`
+- 用户记录仍保存在各自设备本地 `localStorage` 中，不上传到 GitHub。
+- 运行时 localStorage key 保持 `hydration_tracker_v3_records`。
+- 运行时 `schema_version` 保持 `1`。
+- JSON 导入导出格式保持不变，用于备份、迁移和恢复。
+- 旧局域网测试地址与 GitHub Pages 正式地址属于不同来源，localStorage 数据不会自动共享。
+- 迁移方式保持为：旧地址导出 JSON，新地址导入 JSON。
+- Service Worker 只缓存静态资源，不保存、不读取、不修改用户记录数据，也不调用 `localStorage.clear()`。
 
-不应提交：
+发布后更新流程：
 
-- `data/hydration_log.json`
-- `hydration-tracker-backup-*.json`
-- `.env`、令牌、凭据或私钥
-- `.DS_Store`、`.Rhistory`
-- `__pycache__/`、`*.pyc` 和本地虚拟环境
+1. 修改代码。
+2. 本地测试。
+3. 运行 `python3 -m unittest discover tests`。
+4. `commit`。
+5. `push` 到 `main`。
+6. GitHub Actions 自动部署。
+7. 在 iPhone Safari 中刷新或重新打开正式地址验证更新。
 
-GitHub Pages 实际发布内容仍然只应来自 `pwa/`。源代码仓库可以保存 V1、V2、V3 的安全代码和文档，但 Pages 部署产物不能包含 `data/`、`src/` 或其他非 PWA 文件。
+发布后重点测试项：
 
-#### 子路径兼容性检查
-
-目标页面位于仓库子路径 `/hydration-tracker/`。当前 PWA 路径检查结果：
-
-- `index.html` 使用 `styles.css`、`app.js`、`./manifest.json` 和 `./icons/...` 等相对路径。
-- manifest 使用 `"start_url": "./index.html"` 和 `"scope": "./"`，发布后会解析到 `/hydration-tracker/index.html` 和 `/hydration-tracker/`。
-- manifest 图标使用 `./icons/...`，不会跳到网站根目录。
-- Service Worker 使用 `./service-worker.js` 注册，默认作用域为 `/hydration-tracker/`。
-- Service Worker 的静态缓存列表全部使用 `./...`，会在当前 Pages 子路径内解析。
-- 未发现写死为网站根路径 `/styles.css`、`/app.js`、`/manifest.json` 或 `/icons/...` 的资源引用。
-- Service Worker 仍只缓存静态文件，不读取、不缓存、不修改用户记录，也不调用 `localStorage.clear()`。
-
-结论：当前 PWA 静态资源适合部署到 `https://rocksheep27.github.io/hydration-tracker/`，manifest 和 Service Worker 没有需要立即修改的子路径风险。
-
-GitHub Pages 的分支发布来源只支持分支根目录或 `/docs`，不能直接选择当前的 `pwa/`。因此本项目改用 GitHub Actions，把 `pwa/` 作为 Pages artifact 上传并部署。
-
-#### GitHub Pages Actions 部署配置阶段
-
-- 已新增 `.github/workflows/deploy-pages.yml`。
-- 工作流使用 GitHub 官方 Pages Actions：
-  - `actions/checkout`
-  - `actions/configure-pages`
-  - `actions/upload-pages-artifact`
-  - `actions/deploy-pages`
-- `upload-pages-artifact` 的发布路径固定为 `pwa`，因此 Pages 产物只包含 PWA 静态文件。
-- `data/hydration_log.json`、`src/`、`tests/`、`web/` 和其他非 PWA 文件不会作为 GitHub Pages 页面内容发布。
-- 当前预计访问网址保持为 `https://rocksheep27.github.io/hydration-tracker/`。
-- 发布前已提醒先从当前 iPhone 主屏幕 Web App 导出 JSON 备份。
-- GitHub Pages 新网址与旧局域网测试地址属于不同来源，localStorage 不会自动共享。
-- 首次部署后，需要在新网址中通过“备份”视图导入旧 JSON 数据。
-- 发布后需要重点验证：
-  1. Service Worker 更新是否正常获取新版本。
-  2. 主屏幕模式是否能稳定打开。
-  3. 基础离线启动是否正常。
-  4. JSON 导入后今日、历史和备份三视图是否同步刷新。
-
-#### 首次本地提交阶段
-
-- 已完成 `git init`、`main` 分支设置、`origin` 配置和远程分支只读检查。
-- 暂存前已确认本地 JSON、备份、缓存和系统文件均被 `.gitignore` 排除。
-- 首次提交只包含经过检查的项目规则、文档、PWA、V1/V2 源码、测试和 `data/.gitkeep`。
-- 首次本地提交已完成，提交信息为 `Initial commit for HydrationTracker PWA`。
-- 首次推送已完成，当前远程仓库已存在 `refs/heads/main`。
-- 下一步是在 GitHub 网页端选择 GitHub Actions 作为 Pages 发布来源，并让首次 workflow 运行完成。
-
-#### 首次发布前的数据迁移
-
-1. 先在当前真实使用的 iPhone 主屏幕 Web App 中导出 JSON 备份。
-2. 当前局域网地址与 `https://rocksheep27.github.io/hydration-tracker/` 是不同来源，localStorage 不会自动迁移。
-3. 固定 HTTPS 页面发布后，先打开新网址并检查空数据状态。
-4. 再通过“备份”视图导入旧 JSON；导入会替换新网址下的当前本机记录。
-5. localStorage key 保持 `hydration_tracker_v3_records`，`schema_version` 保持 `1`，JSON 导入导出格式保持不变。
+- 页面加载。
+- 主屏幕打开。
+- 添加记录。
+- 历史记录查看。
+- 指定日期补录。
+- 历史单条删除。
+- 清空指定日期。
+- JSON 导入和导出。
+- 离线启动。
+- Service Worker 更新。
 
 ## V3 暂不实现
 

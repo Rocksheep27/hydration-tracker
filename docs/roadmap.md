@@ -154,18 +154,14 @@ V3.9 开始前需要注意：
 - 默认保持 `schema_version: 1`，不调用 `localStorage.clear()`。
 - 不改变 JSON 导入导出格式，也不让 Service Worker 读取、缓存或修改用户记录。
 
-### V3.9：GitHub Pages 发布准备（已开始）
+### V3.9：固定 HTTPS 发布（已完成）
 
-- 方案研究已完成，当前进入 GitHub Pages 发布配置阶段。
-- 已比较 GitHub Pages、Netlify、Vercel 和 Mac 局域网临时服务器。
-- 推荐优先使用 GitHub Pages，并通过 GitHub Actions 只发布 `pwa/` 静态文件，避免 Pages 产物包含用户 JSON 和其他开发文件。
-- GitHub Pages 默认项目网址可作为固定 HTTPS 来源；如以后更换域名或平台，需要通过 JSON 导出和导入迁移数据。
-- 发布前必须从当前实际使用环境导出 JSON 备份，并确认 `hydration_tracker_v3_records`、`schema_version: 1` 和备份格式保持不变。
-- 发布后需要验证主屏幕安装、同一来源数据保留、Service Worker 更新、离线启动、JSON 恢复及家人设备独立使用。
-- Service Worker 继续只缓存静态资源，用户记录仍只保存在各设备 localStorage。
-- 本地 Git 初始化、`main` 分支、`origin` 设置、首次本地提交和首次推送已完成。
-- 发布目标已确定为 GitHub 用户 `Rocksheep27` 的 `hydration-tracker` 仓库，预计网址为 `https://rocksheep27.github.io/hydration-tracker/`。
-- 上传前必须通过 `.gitignore` 排除 `data/hydration_log.json`、JSON 备份、环境文件和本地缓存。
-- PWA 的相对资源、manifest、Service Worker 注册和缓存路径适合 `/hydration-tracker/` 子路径。
-- GitHub Actions Pages workflow 已进入配置阶段，将只发布 `pwa/`，避免 Pages 产物包含 V1/V2 文件或本地数据。
-- 下一步是把 `.github/workflows/deploy-pages.yml` 推送到 GitHub，然后在 GitHub 网页端把 Pages Source 设置为 GitHub Actions。
+- 已通过 GitHub Actions 将 PWA 正式发布到 GitHub Pages。
+- 正式访问地址为 `https://rocksheep27.github.io/hydration-tracker/`。
+- GitHub Actions 只发布 `pwa/` 目录，不发布本地 JSON 数据或 V1/V2 Python 代码作为网页内容。
+- iPhone Safari、主屏幕模式、数据保存和 JSON 导入迁移已通过实际测试。
+- 用户记录继续保存在各自设备的 localStorage 中，不需要账号，也不会自动同步到 GitHub。
+- 旧局域网测试地址与正式地址属于不同来源，数据迁移继续通过 JSON 导出和导入完成。
+- Service Worker 继续只缓存静态资源，不操作用户记录数据。
+- V3 至此已达到“可长期使用的个人 PWA 原型”阶段。
+- 下一阶段进入 V4 增强功能规划。

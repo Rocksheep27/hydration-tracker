@@ -6,7 +6,7 @@ HydrationTracker 是一个个人水分摄入管理小工具，最终目标是做
 
 ## 当前状态
 
-V1 命令行原型、V2 本地 Web App 和 V3.8 历史记录管理均已完成。PWA 现分为“今日 / 历史 / 备份”三个视图，数据继续保存在当前浏览器的 localStorage 中。下一阶段 V3.9 将研究固定 HTTPS 发布方式。
+V1 命令行原型、V2 本地 Web App 和 V3.9 GitHub Pages 发布均已完成。PWA 现分为“今日 / 历史 / 备份”三个视图，已经可以通过固定 HTTPS 地址长期使用，数据继续保存在当前浏览器的 localStorage 中。下一阶段进入 V4 增强功能规划。
 
 当前包含可在 Mac 终端运行的 V1 命令行版本，以及可以查看今日概览、添加记录和整理今日记录的 V2.3 本地 Web App。项目只使用 Python 标准库，不需要安装第三方依赖，但还不是最终 App。
 
@@ -308,22 +308,28 @@ V1 命令行和 V2 Mac 本地 Web App 继续保留，可以按前面的方式正
 
 V3.8 已完成三视图重组、历史月历、近 7 日趋势、历史单条删除、指定日期补录和清空指定日期，可以正式收尾。旧数据清理暂不实现，仅作为未来可选增强。
 
-下一阶段 V3.9 将研究固定 HTTPS 发布方式，使本人和家人的设备可以通过稳定网址访问应用。各设备的数据仍优先保存在各自浏览器本地，不会自动同步。V4 保留每日目标设置、按时间进度判断补水建议、自定义记录、复杂历史统计、提醒等增强功能。
+V3.9 已完成固定 HTTPS 发布，当前正式地址为 `https://rocksheep27.github.io/hydration-tracker/`。各设备的数据仍优先保存在各自浏览器本地，不会自动同步。下一阶段进入 V4 增强功能，保留每日目标设置、按时间进度判断补水建议、自定义记录、复杂历史统计、提醒和家人使用体验优化等候选方向。
 
-## GitHub Pages 发布准备
+## GitHub Pages 正式发布
 
-V3.9 已进入 GitHub Pages Actions 部署配置阶段。当前仓库已完成首次推送，下一步是在 GitHub 网页端把 Pages Source 设为 GitHub Actions。
+V3.9 已完成，HydrationTracker PWA 已通过 GitHub Actions 正式发布到 GitHub Pages。
 
+- 正式访问地址：`https://rocksheep27.github.io/hydration-tracker/`
 - GitHub 仓库：`https://github.com/Rocksheep27/hydration-tracker`
-- 预计访问网址：`https://rocksheep27.github.io/hydration-tracker/`
-- 仓库中的 `.github/workflows/deploy-pages.yml` 会在每次 push 到 `main` 后，只把 `pwa/` 目录发布到 GitHub Pages。
-- Pages 不会发布 `data/hydration_log.json`、`src/`、`tests/` 或 V1/V2 的 Python 代码作为网页内容。
-- 当前局域网测试地址与未来 HTTPS 地址属于不同来源，localStorage 数据不会自动迁移。
-- 首次发布前，必须先在当前实际使用的 iPhone 主屏幕 Web App 中导出 JSON 备份。
-- 发布后，在新 HTTPS 地址打开应用，再通过“备份”视图导入旧数据。
-- localStorage key 仍为 `hydration_tracker_v3_records`，`schema_version` 仍为 `1`，JSON 导入导出格式不变。
-- Service Worker 仍只缓存 `pwa/` 内的静态资源，不保存用户记录数据。
-- 首次部署后，需要重点验证主屏幕模式、离线启动、Service Worker 更新和 JSON 恢复流程。
+- 部署方式：每次 push 到 `main` 后，由 `.github/workflows/deploy-pages.yml` 自动把 `pwa/` 目录发布到 GitHub Pages。
+- Pages 只发布 `pwa/` 静态资源，不会发布 `data/hydration_log.json`、`src/`、`tests/` 或 V1/V2 的 Python 代码作为网页内容。
+- 用户记录保存在各自设备浏览器的 `localStorage` 中，key 仍为 `hydration_tracker_v3_records`，`schema_version` 仍为 `1`。
+- 不需要账号，不会把饮水记录上传到 GitHub，也不会自动在不同设备之间同步。
+- Service Worker 仍只缓存静态资源，不保存、不读取、不修改用户记录数据。
+- 旧局域网测试地址与正式 GitHub Pages 地址属于不同来源，localStorage 数据不会自动共享。
+- 数据迁移方式保持不变：先在旧地址导出 JSON，再到新地址的“备份”视图导入 JSON。
+
+### 正式使用方式
+
+1. 在 iPhone Safari 打开 `https://rocksheep27.github.io/hydration-tracker/`。
+2. 通过 Safari 菜单将页面“添加到主屏幕”。
+3. 首次从主屏幕打开后，如需保留旧测试数据，在“备份”视图导入之前导出的 JSON 备份。
+4. 后续日常记录、历史查看和备份迁移都在正式地址下进行。
 
 详细路线见 `docs/roadmap.md`，产品需求见 `docs/product_requirements.md`。
 
