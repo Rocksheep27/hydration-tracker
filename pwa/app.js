@@ -1021,6 +1021,7 @@ function renderGoalSettings() {
   const targetMl = getCurrentDailyGoalMl();
   elements.currentDailyGoal.textContent = formatNumber(targetMl);
   elements.trendTargetCaption.textContent = `当前目标 ${formatNumber(targetMl)} ml`;
+  elements.goalSettingsToggle.textContent = elements.goalSettingsPanel.hidden ? "修改目标" : "收起目标";
   if (elements.goalSettingsPanel.hidden) {
     elements.goalSettingsInput.value = String(targetMl);
   }
@@ -1400,6 +1401,7 @@ function setGoalSettingsOpen(open, event) {
   const shouldOpen = Boolean(open);
   elements.goalSettingsPanel.hidden = !shouldOpen;
   elements.goalSettingsToggle.setAttribute("aria-expanded", String(shouldOpen));
+  elements.goalSettingsToggle.textContent = shouldOpen ? "收起目标" : "修改目标";
   if (shouldOpen) {
     elements.goalSettingsInput.value = String(getCurrentDailyGoalMl());
     showGoalSettingsMessage("", "");
@@ -1414,6 +1416,21 @@ function cancelGoalSettings(event) {
   setGoalSettingsOpen(false, event);
   elements.goalSettingsInput.value = String(getCurrentDailyGoalMl());
   showGoalSettingsMessage("", "");
+}
+
+function shouldAutoOpenGoalSettings(environment = globalThis) {
+  try {
+    if (environment.matchMedia) {
+      const compactViewport = environment.matchMedia("(max-width: 640px)");
+      if (compactViewport && compactViewport.matches) {
+        return true;
+      }
+    }
+  } catch (_error) {
+    // Ignore matchMedia issues and fall back to width checks.
+  }
+
+  return Number.isFinite(environment.innerWidth) && environment.innerWidth <= 640;
 }
 
 function saveDailyGoalSettings(event) {
@@ -1965,6 +1982,9 @@ if (appShellReady) {
   initializeStorage();
   resetImportSelection();
   renderAll();
+  if (shouldAutoOpenGoalSettings(globalThis)) {
+    setGoalSettingsOpen(true);
+  }
   activateView("today");
   registerServiceWorker();
 }
@@ -1990,6 +2010,7 @@ globalThis.HydrationTrackerV3 = Object.freeze({
   parseStoredData,
   buildDailyGoalSettings,
   validateSettingsContainer,
+  shouldAutoOpenGoalSettings,
   loadSettingsFromStorage,
   writeSettingsToStorage,
   getDailyGoalMl,

@@ -188,6 +188,14 @@ class PwaBackupTest(unittest.TestCase):
         self.assertIn("500", payload["low"])
         self.assertIn("5000", payload["high"])
 
+    def test_goal_settings_auto_open_on_mobile_width(self):
+        payload = self.run_jxa(
+            "printJson({small: HydrationTrackerV3.shouldAutoOpenGoalSettings({innerWidth: 390}), large: HydrationTrackerV3.shouldAutoOpenGoalSettings({innerWidth: 900})});"
+        )
+
+        self.assertTrue(payload["small"])
+        self.assertFalse(payload["large"])
+
     def test_valid_goal_value_is_saved_without_touching_records(self):
         payload = self.run_jxa(
             "var calls = [];"
